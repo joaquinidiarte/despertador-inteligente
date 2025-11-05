@@ -44,7 +44,6 @@ function App() {
             onSubmit={configurarAlarma}
             loading={loading}
             disabled={estado?.activa || false}
-            mensaje={mensaje}
           />
         </div>
 

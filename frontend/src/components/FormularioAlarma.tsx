@@ -1,21 +1,18 @@
 import { useState, type FormEvent } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
+import { Card, CardContent } from './ui/card'
 import { Button } from './ui/button'
-import { Alert, AlertDescription } from './ui/alert'
 import TimePicker from './TimePickerWheel'
 
 interface FormularioAlarmaProps {
   onSubmit: (hora: string) => void
   loading: boolean
   disabled: boolean
-  mensaje: string
 }
 
 export default function FormularioAlarma({
   onSubmit,
   loading,
   disabled,
-  mensaje,
 }: FormularioAlarmaProps) {
   const [horaAlarma, setHoraAlarma] = useState<string>('07:00')
 
@@ -29,13 +26,6 @@ export default function FormularioAlarma({
 
   return (
     <Card className="bg-card text-card-foreground">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          Configurar Nueva Alarma
-        </CardTitle>
-        <CardDescription>Deslizá para seleccionar la hora de despertar</CardDescription>
-      </CardHeader>
-
       <CardContent>
         <form
           onSubmit={handleSubmit}
@@ -67,17 +57,11 @@ export default function FormularioAlarma({
               </>
             ) : (
               <>
-                Establecer Alarma
+                Establecer alarma
               </>
             )}
           </Button>
         </form>
-
-        {mensaje && (
-          <Alert className="mt-4" role="status" aria-live="polite">
-            <AlertDescription>{mensaje}</AlertDescription>
-          </Alert>
-        )}
       </CardContent>
     </Card>
   )

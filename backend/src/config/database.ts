@@ -1,13 +1,15 @@
 import sqlite3 from 'sqlite3';
 import path from 'path';
 
-const dbPath = path.join(__dirname, '../../data/despertador.db');
+const PROJECT_ROOT = path.resolve(__dirname, '../../..');
+const dbPath = path.join(PROJECT_ROOT, 'data', 'despertador.db');
 
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
     console.error('error al conectar con la base de datos:', err);
   } else {
     console.log('conectado a la base de datos SQLite');
+    console.log('DB Path:', dbPath);
     initDatabase();
   }
 });

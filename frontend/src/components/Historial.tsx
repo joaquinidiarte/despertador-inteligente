@@ -45,10 +45,10 @@ export default function Historial({ historial }: HistorialProps) {
     <Card className="bg-card text-card-foreground">
       <CardHeader className="pb-3 sm:pb-6">
         <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-          Historial de Sueño
+          Historial de sueño
         </CardTitle>
         <CardDescription className="text-sm">
-          Registro de tus rutinas de descanso
+          Registro del tiempo de descanso
         </CardDescription>
       </CardHeader>
 
@@ -58,9 +58,6 @@ export default function Historial({ historial }: HistorialProps) {
             <Moon className="mx-auto mb-3 h-12 w-12 text-muted-foreground sm:h-16 sm:w-16 sm:mb-4" />
             <p className="text-base text-muted-foreground sm:text-lg">
               No hay registros aún
-            </p>
-            <p className="mt-2 text-xs text-muted-foreground sm:text-sm">
-              Configurá tu primera alarma para comenzar
             </p>
           </div>
         ) : (
@@ -88,7 +85,6 @@ export default function Historial({ historial }: HistorialProps) {
                     <div className="space-y-1.5 text-xs sm:space-y-2 sm:text-sm">
                       <div className="flex items-center justify-between">
                         <span className="flex items-center gap-1 text-muted-foreground">
-                          <Moon className="h-4 w-4" />
                           Luz apagada:
                         </span>
                         <Badge variant="outline" className="text-xs">
@@ -98,7 +94,6 @@ export default function Historial({ historial }: HistorialProps) {
 
                       <div className="flex items-center justify-between">
                         <span className="flex items-center gap-1 text-muted-foreground">
-                          <Clock className="h-4 w-4" />
                           Alarma:
                         </span>
                         <Badge variant="outline" className="text-xs">

@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { Clock, Moon, Hand, AlertCircle } from 'lucide-react';
+import { Clock, Hand, AlertCircle } from 'lucide-react';
 import type { AlarmaEstado } from '../types';
 
 interface EstadoAlarmaProps {
@@ -25,7 +25,7 @@ export default function EstadoAlarma({ estado, onCancelar, loading }: EstadoAlar
     <Card className="border">
       <CardHeader className="pb-3 sm:pb-6">
         <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-          Estado Actual
+          Estado actual
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3 sm:space-y-4">
@@ -36,7 +36,7 @@ export default function EstadoAlarma({ estado, onCancelar, loading }: EstadoAlar
                 <Clock className="h-7 w-7 sm:h-8 sm:w-8 text-green-500 animate-pulse-glow" />
               </div>
               <Badge variant="default" className="text-base sm:text-lg px-3 sm:px-4 py-1.5 sm:py-2 bg-green-500">
-                Alarma Activa
+                Alarma activa
               </Badge>
             </div>
             
@@ -63,7 +63,7 @@ export default function EstadoAlarma({ estado, onCancelar, loading }: EstadoAlar
               size="lg"
             >
               <AlertCircle className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-              Cancelar Alarma
+              Cancelar alarma
             </Button>
           </>
         ) : estado.esperando_mano ? (
@@ -71,7 +71,7 @@ export default function EstadoAlarma({ estado, onCancelar, loading }: EstadoAlar
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
               <Hand className="h-7 w-7 sm:h-8 sm:w-8 text-yellow-500 animate-pulse-glow" />
               <Badge variant="secondary" className="text-base sm:text-lg px-3 sm:px-4 py-1.5 sm:py-2 bg-yellow-500 text-black">
-                Esperando Detección
+                Esperando detección
               </Badge>
             </div>
             

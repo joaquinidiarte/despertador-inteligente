@@ -9,8 +9,6 @@ export function useAlarma() {
   const [loading, setLoading] = useState(false)
 
   const mensaje = estado?.activa
-    ? `Alarma activa para las ${estado.hora_alarma}`
-    : "No hay ninguna alarma activa"
 
   const cargarEstado = useCallback(async () => {
     try {

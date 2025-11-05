@@ -1,38 +1,41 @@
-import { useRef, useEffect, useState, useCallback } from 'react'
-import { cn } from '../lib/utils'
+import { useRef, useEffect, useState, useCallback } from 'react';
+import { cn } from '../lib/utils';
 
 interface TimePickerWheelProps {
-  value: number
-  max: number
-  onChange: (value: number) => void
-  label?: string
+  value: number;
+  max: number;
+  onChange: (value: number) => void;
+  label?: string;
 }
 
 function TimePickerWheel({ value, max, onChange, label }: TimePickerWheelProps) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [isDragging, setIsDragging] = useState(false)
-  const itemHeight = 60
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const itemHeight = 60;
 
   useEffect(() => {
     if (containerRef.current && !isDragging) {
-      const targetScroll = value * itemHeight
-      containerRef.current.scrollTop = targetScroll
+      const targetScroll = value * itemHeight;
+      containerRef.current.scrollTop = targetScroll;
     }
-  }, [value, isDragging])
+  }, [value, isDragging]);
 
   const handleScroll = useCallback(() => {
-    if (!containerRef.current || isDragging) return
-    const scrollTop = containerRef.current.scrollTop
-    const index = Math.round(scrollTop / itemHeight)
-    const next = index % (max + 1)
-    if (next !== value) onChange(next)
-  }, [value, max, onChange, isDragging])
+    if (!containerRef.current || isDragging) return;
 
-  const startDrag = () => setIsDragging(true)
-  const endDrag = () => {
-    setIsDragging(false)
-    handleScroll()
-  }
+    const scrollTop = containerRef.current.scrollTop;
+    const index = Math.round(scrollTop / itemHeight);
+    
+    if (index !== value) {
+      onChange(index % (max + 1));
+    }
+  }, [value, max, onChange, isDragging]);
+
+  const handleTouchStart = () => setIsDragging(true);
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+    handleScroll();
+  };
 
   return (
     <div className="relative flex-1">
@@ -41,115 +44,90 @@ function TimePickerWheel({ value, max, onChange, label }: TimePickerWheelProps) 
           {label}
         </div>
       )}
-
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        onTouchStart={startDrag}
-        onTouchEnd={endDrag}
-        onMouseDown={startDrag}
-        onMouseUp={endDrag}
-        onMouseLeave={isDragging ? endDrag : undefined}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onMouseDown={handleTouchStart}
+        onMouseUp={handleTouchEnd}
         className="h-[180px] overflow-y-scroll snap-y snap-mandatory scrollbar-hide"
         style={{
-          maskImage:
-            'linear-gradient(to bottom, transparent, black 20%, black 80%, transparent)',
-          WebkitMaskImage:
-            'linear-gradient(to bottom, transparent, black 20%, black 80%, transparent)',
+          maskImage: 'linear-gradient(to bottom, transparent, black 20%, black 80%, transparent)',
+          WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 20%, black 80%, transparent)'
         }}
       >
         <div className="h-[60px]" />
-
+        
         {Array.from({ length: (max + 1) * 3 }, (_, i) => {
-          const num = i % (max + 1) // 0..max
-          const isSelected = num === value
-
-          const display = label === 'Hora'
-            ? (num === 0 ? '12' : String(num).padStart(2, '0')) // 0→12 visual
-            : String(num).padStart(2, '0')
-
+          const num = i % (max + 1);
+          const isSelected = num === value;
+          
           return (
             <div
               key={i}
               className={cn(
-                'h-[60px] flex items-center justify-center text-3xl font-bold transition-all duration-200 snap-center select-none',
-                isSelected ? 'text-primary scale-110' : 'text-muted-foreground/50 scale-90'
+                "h-[60px] flex items-center justify-center text-3xl font-bold transition-all duration-200 snap-center select-none",
+                isSelected 
+                  ? "text-primary scale-110" 
+                  : "text-muted-foreground/50 scale-90"
               )}
             >
-              {display}
+              {label === 'Hora' && num === 0 ? '12' : num.toString().padStart(2, '0')}
             </div>
-          )
+          );
         })}
-
+        
         <div className="h-[60px]" />
       </div>
-
-      <div className="pointer-events-none absolute left-0 right-0 top-1/2 h-[60px] -translate-y-1/2 rounded-lg border-y-2 border-primary/20 bg-primary/5" />
+      
+      <div className="absolute top-1/2 left-0 right-0 h-[60px] -translate-y-1/2 border-y-2 border-primary/20 rounded-lg pointer-events-none bg-primary/5" />
     </div>
-  )
+  );
 }
 
 interface TimePickerProps {
-  value: string // "HH:MM" 24h
-  onChange: (time: string) => void
+  value: string;
+  onChange: (time: string) => void;
 }
 
 export default function TimePicker({ value, onChange }: TimePickerProps) {
-  // Horas en 12h: 0..11 (0 ≡ 12)
-  const [hours, setHours] = useState<number>(7)   // 0..11
-  const [minutes, setMinutes] = useState<number>(0)
-  const [period, setPeriod] = useState<'AM' | 'PM'>('AM')
+  const [hours, setHours] = useState<number>(7);
+  const [minutes, setMinutes] = useState<number>(0);
+  const [period, setPeriod] = useState<'AM' | 'PM'>('AM');
 
-  // Parsear prop value cuando cambie
   useEffect(() => {
-    if (!value) return
-    const [hStr, mStr] = value.split(':')
-    const h = Number(hStr)
-    const m = Number(mStr)
-    const isPM = h >= 12
-
-    // Convertir 24h → 12h (0..11 interno)
-    // 00:xx → 12:xx AM → hours=0
-    // 12:xx → 12:xx PM → hours=0 + PM
-    // 13..23 → (h-12) PM
-    // 01..11 → h AM
-    let hh: number
-    if (h === 0) hh = 0
-    else if (h === 12) hh = 0
-    else if (h > 12) hh = h - 12
-    else hh = h
-
-    setHours(hh)
-    setMinutes(m)
-    setPeriod(isPM ? 'PM' : 'AM')
-  }, [value])
-
-  // Emitir en 24h cuando cambien horas/minutos/period
-  useEffect(() => {
-    // 12h (interno 0..11) → 24h
-    // AM: 12 AM (hours=0) → 00; resto hh
-    // PM: 12 PM (hours=0) → 12; resto hh+12
-    let h24: number
-    if (period === 'AM') {
-      h24 = hours === 0 ? 0 : hours
-    } else {
-      h24 = hours === 0 ? 12 : hours + 12
+    if (value) {
+      const [h, m] = value.split(':').map(Number);
+      const is24h = h >= 12;
+      setHours(is24h ? (h === 12 ? 12 : h - 12) : (h === 0 ? 12 : h));
+      setMinutes(m);
+      setPeriod(is24h ? 'PM' : 'AM');
     }
+  }, []);
 
-    const timeString = `${String(h24).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
-    onChange(timeString)
-  }, [hours, minutes, period, onChange])
+  useEffect(() => {
+    let h24 = hours;
+    if (period === 'PM' && hours !== 12) {
+      h24 = hours + 12;
+    } else if (period === 'AM' && hours === 12) {
+      h24 = 0;
+    }
+    
+    const timeString = `${h24.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    onChange(timeString);
+  }, [hours, minutes, period, onChange]);
 
   return (
     <div className="flex items-center justify-center gap-3 py-4">
       <TimePickerWheel
         value={hours}
-        max={11}         // 👈 0..11, sin duplicar “12”
+        max={12}
         onChange={setHours}
         label="Hora"
       />
 
-      <div className="mt-6 text-4xl font-bold text-primary/50">:</div>
+      <div className="text-4xl font-bold text-primary/50 mt-6">:</div>
 
       <TimePickerWheel
         value={minutes}
@@ -158,15 +136,15 @@ export default function TimePicker({ value, onChange }: TimePickerProps) {
         label="Minutos"
       />
 
-      <div className="ml-3 flex flex-col gap-2">
+      <div className="flex flex-col gap-2 ml-3">
         <button
           type="button"
           onClick={() => setPeriod('AM')}
           className={cn(
-            'h-14 w-16 rounded-xl text-sm font-bold transition-all',
+            "w-16 h-14 rounded-xl font-bold text-sm transition-all",
             period === 'AM'
-              ? 'bg-primary text-primary-foreground shadow-lg scale-105'
-              : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+              ? "bg-primary text-primary-foreground shadow-lg scale-105"
+              : "bg-muted/50 text-muted-foreground hover:bg-muted"
           )}
         >
           AM
@@ -175,15 +153,15 @@ export default function TimePicker({ value, onChange }: TimePickerProps) {
           type="button"
           onClick={() => setPeriod('PM')}
           className={cn(
-            'h-14 w-16 rounded-xl text-sm font-bold transition-all',
+            "w-16 h-14 rounded-xl font-bold text-sm transition-all",
             period === 'PM'
-              ? 'bg-primary text-primary-foreground shadow-lg scale-105'
-              : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+              ? "bg-primary text-primary-foreground shadow-lg scale-105"
+              : "bg-muted/50 text-muted-foreground hover:bg-muted"
           )}
         >
           PM
         </button>
       </div>
     </div>
-  )
+  );
 }
