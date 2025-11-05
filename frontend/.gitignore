@@ -2,6 +2,8 @@ node_modules/
 dist/
 .env
 .env.local
+.vite
+package-lock.json
 
 # Logs
 logs
