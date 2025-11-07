@@ -1,0 +1,42 @@
+**Crear `.dockerignore` en la raíz:**
+```
+# Node modules
+**/node_modules
+**/npm-debug.log
+
+# Build outputs
+**/dist
+**/build
+
+# Python
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.Python
+**/.venv
+**/venv
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data (se monta como volumen)
+data/
+
+# Logs
+**/*.log
+
+# Environment
+.env.local
+.env.*.local

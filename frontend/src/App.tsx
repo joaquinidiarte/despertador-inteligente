@@ -11,7 +11,6 @@ function App() {
     estado,
     historial,
     loading,
-    mensaje,
     configurarAlarma,
     cancelarAlarma,
   } = useAlarma()

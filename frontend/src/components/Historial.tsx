@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
 import { Badge } from './ui/badge'
-import { Calendar, Clock, Moon, Image as ImageIcon } from 'lucide-react'
+import { Calendar, Moon, Image as ImageIcon } from 'lucide-react'
 import type { AlarmaHistorial } from '../types'
 import { useMemo, useState } from 'react'
 import { cn } from '../lib/utils'

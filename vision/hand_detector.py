@@ -14,7 +14,7 @@ DATA_DIR = BASE_DIR / 'data'
 IMAGES_DIR = DATA_DIR / 'images'
 STATE_FILE = DATA_DIR / 'state.json'
 
-BACKEND_URL = 'http://localhost:3000'
+BACKEND_URL = os.getenv('BACKEND_URL', 'http://localhost:3000')
 
 IMAGES_DIR.mkdir(parents=True, exist_ok=True)
 
