@@ -1,18 +1,28 @@
-FROM node:20-alpine
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copiar package files
 COPY package*.json ./
 
-# Instalar dependencias
-RUN npm install
+RUN npm ci
 
-# Copiar código fuente
 COPY . .
 
-# Exponer puerto Vite
-EXPOSE 5173
+RUN npm run build
 
-# Comando de desarrollo
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+FROM nginx:alpine
+
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+RUN echo 'server { \
+    listen 80; \
+    root /usr/share/nginx/html; \
+    index index.html; \
+    location / { \
+        try_files $uri $uri/ /index.html; \
+    } \
+}' > /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
