@@ -69,4 +69,37 @@ router.delete('/alarma', (_req: Request, res: Response): void => {
   }
 });
 
+// Almacenar el último frame de video
+let latestFrame: Buffer | null = null;
+
+router.post('/video-frame', (req: Request, res: Response): void => {
+  try {
+    const { frame } = req.body;
+    if (frame) {
+      // Convertir base64 a Buffer
+      latestFrame = Buffer.from(frame, 'base64');
+    }
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+router.get('/video-stream', (req: Request, res: Response): void => {
+  res.setHeader('Content-Type', 'multipart/x-mixed-replace; boundary=frame');
+
+  const intervalId = setInterval(() => {
+    if (latestFrame) {
+      res.write('--frame\r\n');
+      res.write('Content-Type: image/jpeg\r\n\r\n');
+      res.write(latestFrame);
+      res.write('\r\n');
+    }
+  }, 100); // 10 FPS
+
+  req.on('close', () => {
+    clearInterval(intervalId);
+  });
+});
+
 export default router;

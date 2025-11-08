@@ -1,5 +1,6 @@
 export interface AlarmaEstado {
   activa: boolean;
+  monitoring?: boolean;
   esperando_mano?: boolean;
   hora_alarma?: string;
   tiempo_restante_minutos?: number;

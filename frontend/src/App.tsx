@@ -2,6 +2,7 @@ import { useAlarma } from './hooks/useAlarma'
 import EstadoAlarma from './components/EstadoAlarma'
 import FormularioAlarma from './components/FormularioAlarma'
 import Historial from './components/Historial'
+import VideoStream from './components/VideoStream'
 import { ThemeProvider } from './components/theme-provider'
 import { Toaster } from 'sonner'
 import './index.css'
@@ -45,6 +46,9 @@ function App() {
             disabled={estado?.activa || false}
           />
         </div>
+
+        {/* Vista previa de video cuando la alarma está activa */}
+        <VideoStream isMonitoring={estado?.monitoring || false} />
 
         <Historial historial={historial} />
       </main>

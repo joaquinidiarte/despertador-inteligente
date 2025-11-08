@@ -5,6 +5,7 @@ import mediapipe as mp
 import time
 import json
 import os
+import base64
 from datetime import datetime
 import requests
 from pathlib import Path
@@ -109,6 +110,22 @@ def guardar_imagen(frame):
     return filename
 
 
+def enviar_frame_al_backend(frame):
+    """Envía el frame actual al backend para streaming"""
+    try:
+        # Codificar frame a JPEG
+        _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 70])
+        # Convertir a base64
+        frame_base64 = base64.b64encode(buffer).decode('utf-8')
+
+        requests.post(
+            f'{BACKEND_URL}/api/video-frame',
+            json={'frame': frame_base64},
+            timeout=1
+        )
+    except:
+        pass  # Ignorar errores de streaming para no interrumpir la detección
+
 def notificar_backend(image_filename):
     """Notifica al backend que se detectó la mano"""
     try:
@@ -117,7 +134,7 @@ def notificar_backend(image_filename):
             json={'image_path': image_filename},
             timeout=5
         )
-        
+
         if response.status_code == 200:
             data = response.json()
             print(f"backend notificado: {data.get('message')}")
@@ -125,7 +142,7 @@ def notificar_backend(image_filename):
         else:
             print(f"error del backend: {response.status_code}")
             return False
-            
+
     except requests.exceptions.ConnectionError:
         print("no se pudo conectar con el backend. ¿Está corriendo?")
         return False
@@ -188,23 +205,25 @@ def main():
     fps_time = time.time()
     fps = 0
     ultimo_estado_monitoring = False
-    
+    frame_stream_count = 0
+
     try:
         while True:
             ret, frame = cap.read()
-            
+
             if not ret:
                 print("error leyendo frame de la cámara")
                 break
-            
+
             frame_count += 1
-            
+            frame_stream_count += 1
+
             # Calcular FPS cada segundo
             if time.time() - fps_time >= 1.0:
                 fps = frame_count
                 frame_count = 0
                 fps_time = time.time()
-            
+
             # Voltear imagen
             frame = cv2.flip(frame, 1)
             
@@ -227,6 +246,10 @@ def main():
                 else:
                     print("\n💤 Modo standby")
                 ultimo_estado_monitoring = monitoring
+
+            # Enviar frame al backend cada 3 frames si está monitoreando (para reducir carga)
+            if monitoring and frame_stream_count % 3 == 0:
+                enviar_frame_al_backend(frame)
             
             # UI en pantalla (solo si no es headless)
             if not HEADLESS:
