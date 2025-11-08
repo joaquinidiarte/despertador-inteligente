@@ -1,6 +1,37 @@
 version: '3.8'
 
 services:
+  # Backend - Node.js + Express + SQLite
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: despertador-backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    command: npm run dev
+    volumes:
+      - ./data:/app/data
+      - ./backend/src:/app/src
+      - ./backend/nodemon.json:/app/nodemon.json
+      - ./backend/tsconfig.json:/app/tsconfig.json
+      # Excluir node_modules del bind mount para evitar conflictos
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - DATA_DIR=/app/data
+    networks:
+      - despertador-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/estado"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend - React + Nginx
   frontend:
     build:
       context: ./frontend
@@ -9,9 +40,44 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
+    depends_on:
+      - backend
     networks:
       - despertador-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Vision - Python + MediaPipe
+  vision:
+    build:
+      context: ./vision
+      dockerfile: Dockerfile
+    container_name: despertador-vision
+    restart: unless-stopped
+    command: python hand_detector.py
+    devices:
+      - /dev/video0:/dev/video0  # Webcam (Linux/Mac)
+    volumes:
+      - ./data:/app/data
+      - ./vision:/app
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    environment:
+      - BACKEND_URL=http://backend:3000
+      - DISPLAY=${DISPLAY:-:0}
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - backend
+    networks:
+      - despertador-network
+    privileged: true  # Necesario para acceso a cámara
 
 networks:
   despertador-network:
     driver: bridge
+
+volumes:
+  data:
+    driver: local

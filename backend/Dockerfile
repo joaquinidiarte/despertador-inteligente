@@ -1,27 +1,18 @@
 FROM node:20-alpine
 
-# Instalar dependencias del sistema
-RUN apk add --no-cache python3 make g++
-
 WORKDIR /app
 
-# Copiar package files
+# Copiar package.json y package-lock.json
 COPY package*.json ./
 
-# Instalar dependencias
-RUN npm ci --only=production
+# Instalar TODAS las dependencias (incluye devDependencies: typescript, ts-node, nodemon, etc.)
+RUN npm ci
 
-# Copiar código fuente
-COPY . .
+# El código se monta por volumen en docker-compose para hot-reload
+# No copiamos el código aquí en modo desarrollo
 
-# Compilar TypeScript
-RUN npm run build
-
-# Exponer puerto
 EXPOSE 3000
 
-# Variables de entorno
-ENV NODE_ENV=production
+ENV NODE_ENV=development
 
-# Comando de inicio
-CMD ["node", "dist/server.js"]
+# El comando se define en docker-compose.yml: npm run dev

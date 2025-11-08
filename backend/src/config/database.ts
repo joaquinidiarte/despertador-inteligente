@@ -1,8 +1,16 @@
 import sqlite3 from 'sqlite3';
 import path from 'path';
+import fs from 'fs';
 
-const PROJECT_ROOT = path.resolve(__dirname, '../../..');
-const dbPath = path.join(PROJECT_ROOT, 'data', 'despertador.db');
+// Usar variable de entorno para la ruta de datos, con fallback
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '../../..', 'data');
+const dbPath = path.join(DATA_DIR, 'despertador.db');
+
+// Asegurar que el directorio existe
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  console.log('directorio de datos creado:', DATA_DIR);
+}
 
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {

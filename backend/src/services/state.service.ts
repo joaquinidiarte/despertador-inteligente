@@ -2,8 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { AlarmaEstado } from '../types';
 
-const PROJECT_ROOT = path.resolve(__dirname, '../../..');
-const DATA_DIR = path.join(PROJECT_ROOT, 'data');
+// Usar variable de entorno para la ruta de datos, con fallback
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '../../..', 'data');
 const STATE_FILE = path.join(DATA_DIR, 'state.json');
 
 class StateService {
