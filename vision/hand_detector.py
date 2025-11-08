@@ -9,6 +9,9 @@ from datetime import datetime
 import requests
 from pathlib import Path
 
+# Detectar si estamos en modo headless (Docker sin display)
+HEADLESS = os.getenv('HEADLESS', 'false').lower() == 'true'
+
 BASE_DIR = Path(__file__).parent.parent
 DATA_DIR = BASE_DIR / 'data'
 IMAGES_DIR = DATA_DIR / 'images'
@@ -17,6 +20,11 @@ STATE_FILE = DATA_DIR / 'state.json'
 BACKEND_URL = os.getenv('BACKEND_URL', 'http://localhost:3000')
 
 IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+
+if HEADLESS:
+    print("🖥️  Modo HEADLESS activado (sin interfaz gráfica)")
+    # Configurar OpenCV para no usar GUI
+    os.environ['QT_QPA_PLATFORM'] = 'offscreen'
 
 mp_hands = mp.solutions.hands
 mp_drawing = mp.solutions.drawing_utils
@@ -151,13 +159,22 @@ def main():
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
     
     print("webcam iniciada correctamente")
-    print("\n" + "="*50)
-    print("INSTRUCCIONES:")
-    print("- Presiona 'q' para salir")
-    print("- Presiona 's' para tomar screenshot")
-    print("- Presiona 'd' para ver estado de debug")
-    print("- Cuando la alarma esté activa, extiende tu mano")
-    print("="*50 + "\n")
+
+    if not HEADLESS:
+        print("\n" + "="*50)
+        print("INSTRUCCIONES:")
+        print("- Presiona 'q' para salir")
+        print("- Presiona 's' para tomar screenshot")
+        print("- Presiona 'd' para ver estado de debug")
+        print("- Cuando la alarma esté activa, extiende tu mano")
+        print("="*50 + "\n")
+    else:
+        print("\n" + "="*50)
+        print("MODO HEADLESS ACTIVO")
+        print("- Ejecutándose en segundo plano")
+        print("- Sin interfaz gráfica")
+        print("- Presiona Ctrl+C para detener")
+        print("="*50 + "\n")
     
     ultima_deteccion = 0
     cooldown = 3
@@ -205,37 +222,40 @@ def main():
                     print("\n💤 Modo standby")
                 ultimo_estado_monitoring = monitoring
             
-            # UI en pantalla
-            status_color = (0, 255, 0) if monitoring else (128, 128, 128)
-            status_text = f"ESPERANDO MANO - {alarm_time}" if monitoring else "STANDBY"
-            
-            cv2.putText(frame, status_text, (10, 30),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.7, status_color, 2)
-            
-            cv2.putText(frame, f"FPS: {fps}", (10, 60),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
-            
-            # Contador de detecciones
-            manos_detectadas = len(results.multi_hand_landmarks) if results.multi_hand_landmarks else 0
-            cv2.putText(frame, f"Manos: {manos_detectadas}", (10, 90),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
+            # UI en pantalla (solo si no es headless)
+            if not HEADLESS:
+                status_color = (0, 255, 0) if monitoring else (128, 128, 128)
+                status_text = f"ESPERANDO MANO - {alarm_time}" if monitoring else "STANDBY"
+
+                cv2.putText(frame, status_text, (10, 30),
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.7, status_color, 2)
+
+                cv2.putText(frame, f"FPS: {fps}", (10, 60),
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+
+                # Contador de detecciones
+                manos_detectadas = len(results.multi_hand_landmarks) if results.multi_hand_landmarks else 0
+                cv2.putText(frame, f"Manos: {manos_detectadas}", (10, 90),
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
             
             # Si se detectan manos
             if results.multi_hand_landmarks:
                 for hand_landmarks in results.multi_hand_landmarks:
-                    # Dibujar landmarks
-                    mp_drawing.draw_landmarks(
-                        frame,
-                        hand_landmarks,
-                        mp_hands.HAND_CONNECTIONS,
-                        mp_drawing.DrawingSpec(color=(0, 255, 0), thickness=2, circle_radius=2),
-                        mp_drawing.DrawingSpec(color=(255, 0, 0), thickness=2)
-                    )
-                    
+                    # Dibujar landmarks (solo si no es headless)
+                    if not HEADLESS:
+                        mp_drawing.draw_landmarks(
+                            frame,
+                            hand_landmarks,
+                            mp_hands.HAND_CONNECTIONS,
+                            mp_drawing.DrawingSpec(color=(0, 255, 0), thickness=2, circle_radius=2),
+                            mp_drawing.DrawingSpec(color=(255, 0, 0), thickness=2)
+                        )
+
                     # Verificar si es mano abierta
                     if es_mano_abierta_arriba(hand_landmarks):
-                        cv2.putText(frame, "MANO ABIERTA DETECTADA", (10, 120),
-                                   cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
+                        if not HEADLESS:
+                            cv2.putText(frame, "MANO ABIERTA DETECTADA", (10, 120),
+                                       cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
                         
                         # Si estamos monitoreando
                         if monitoring:
@@ -253,41 +273,47 @@ def main():
                                 # Notificar al backend
                                 if notificar_backend(image_filename):
                                     ultima_deteccion = tiempo_actual
-                                    
-                                    # Confirmación visual
-                                    overlay = frame.copy()
-                                    cv2.rectangle(overlay, (0, 0), 
-                                                (frame.shape[1], frame.shape[0]),
-                                                (0, 255, 0), -1)
-                                    frame = cv2.addWeighted(frame, 0.7, overlay, 0.3, 0)
-                                
+
+                                    # Confirmación visual (solo si no es headless)
+                                    if not HEADLESS:
+                                        overlay = frame.copy()
+                                        cv2.rectangle(overlay, (0, 0),
+                                                    (frame.shape[1], frame.shape[0]),
+                                                    (0, 255, 0), -1)
+                                        frame = cv2.addWeighted(frame, 0.7, overlay, 0.3, 0)
+
                                 print("="*50 + "\n")
-            
-            # Mostrar frame
-            cv2.imshow('Detector de Manos - Despertador', frame)
-            
-            # Capturar teclas
-            key = cv2.waitKey(1) & 0xFF
-            
-            if key == ord('q'):
-                print("\ncerrando detector...")
-                break
-            elif key == ord('s'):
-                screenshot_name = guardar_imagen(frame)
-                print(f"screenshot guardado: {screenshot_name}")
-            elif key == ord('d'):
-                # Debug: mostrar estado actual
-                print("\n" + "="*50)
-                print("DEBUG - ESTADO ACTUAL")
-                print("="*50)
-                print(f"Monitoring: {monitoring}")
-                print(f"Alarm time: {alarm_time}")
-                print(f"State file: {STATE_FILE}")
-                print(f"File exists: {STATE_FILE.exists()}")
-                if STATE_FILE.exists():
-                    with open(STATE_FILE, 'r') as f:
-                        print(f"File content: {f.read()}")
-                print("="*50 + "\n")
+
+            # Mostrar frame (solo si no es headless)
+            if not HEADLESS:
+                cv2.imshow('Detector de Manos - Despertador', frame)
+
+            # Capturar teclas (solo si no es headless)
+            if not HEADLESS:
+                key = cv2.waitKey(1) & 0xFF
+
+                if key == ord('q'):
+                    print("\ncerrando detector...")
+                    break
+                elif key == ord('s'):
+                    screenshot_name = guardar_imagen(frame)
+                    print(f"screenshot guardado: {screenshot_name}")
+                elif key == ord('d'):
+                    # Debug: mostrar estado actual
+                    print("\n" + "="*50)
+                    print("DEBUG - ESTADO ACTUAL")
+                    print("="*50)
+                    print(f"Monitoring: {monitoring}")
+                    print(f"Alarm time: {alarm_time}")
+                    print(f"State file: {STATE_FILE}")
+                    print(f"File exists: {STATE_FILE.exists()}")
+                    if STATE_FILE.exists():
+                        with open(STATE_FILE, 'r') as f:
+                            print(f"File content: {f.read()}")
+                    print("="*50 + "\n")
+            else:
+                # En modo headless, pequeña pausa para no consumir 100% CPU
+                time.sleep(0.01)
     
     except KeyboardInterrupt:
         print("\n\ninterrumpido por el usuario")
@@ -298,150 +324,6 @@ def main():
         cv2.destroyAllWindows()
         hands.close()
         print("✅ Detector detenido correctamente")
-        print("\n" + "="*50 + "\n")
-    print("\n" + "="*50)
-    print("DETECTOR DE MANOS - DESPERTADOR INTELIGENTE")
-    print("="*50)
-    
-    # Verificar backend
-    print("\n🔍 Verificando conexión con backend...")
-    if verificar_backend():
-        print("backend conectado")
-    else:
-        print("backend no disponible. El sistema seguirá intentando...")
-    
-    # Intentar abrir webcam
-    print("\nIniciando webcam...")
-    cap = cv2.VideoCapture(0)
-    
-    if not cap.isOpened():
-        print("Error: No se pudo abrir la webcam")
-        print("   Verifica que:")
-        print("   - La webcam esté conectada")
-        print("   - No esté siendo usada por otra aplicación")
-        print("   - Tengas permisos de acceso")
-        return
-
-    print("Webcam iniciada correctamente")
-    print("\n" + "="*50)
-    print("INSTRUCCIONES:")
-    print("- Presiona 'q' para salir")
-    print("- Presiona 's' para tomar screenshot")
-    print("- Cuando la alarma esté activa, extiende tu mano")
-    print("="*50 + "\n")
-    
-    ultima_deteccion = 0
-    cooldown = 3  # Segundos entre detecciones
-    frame_count = 0
-    fps_time = time.time()
-    fps = 0
-    
-    try:
-        while True:
-            ret, frame = cap.read()
-            
-            if not ret:
-                print("Error leyendo frame de la cámara")
-                break
-            
-            frame_count += 1
-            
-            # Calcular FPS cada segundo
-            if time.time() - fps_time >= 1.0:
-                fps = frame_count
-                frame_count = 0
-                fps_time = time.time()
-            
-            # Voltear imagen horizontalmente (efecto espejo)
-            frame = cv2.flip(frame, 1)
-            
-            # Convertir BGR a RGB para MediaPipe
-            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            
-            # Procesar frame con MediaPipe
-            results = hands.process(rgb_frame)
-            
-            # Leer estado actual
-            estado = leer_estado()
-            monitoring = estado.get('monitoring', False)
-            
-            # Dibujar información en pantalla
-            status_color = (0, 255, 0) if monitoring else (128, 128, 128)
-            status_text = "ESPERANDO MANO" if monitoring else "STANDBY"
-            
-            cv2.putText(frame, status_text, (10, 30),
-                       cv2.FONT_HERSHEY_SIMPLEX, 1, status_color, 2)
-            
-            cv2.putText(frame, f"FPS: {fps}", (10, 70),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-            
-            # Si se detectan manos
-            if results.multi_hand_landmarks:
-                for hand_landmarks in results.multi_hand_landmarks:
-                    # Dibujar landmarks de la mano
-                    mp_drawing.draw_landmarks(
-                        frame,
-                        hand_landmarks,
-                        mp_hands.HAND_CONNECTIONS,
-                        mp_drawing.DrawingSpec(color=(0, 255, 0), thickness=2, circle_radius=2),
-                        mp_drawing.DrawingSpec(color=(255, 0, 0), thickness=2)
-                    )
-                    
-                    # Si estamos monitoreando, verificar si es mano abierta
-                    if monitoring:
-                        if es_mano_abierta_arriba(hand_landmarks):
-                            tiempo_actual = time.time()
-                            
-                            # Evitar detecciones múltiples (cooldown)
-                            if tiempo_actual - ultima_deteccion > cooldown:
-                                print("\n" + "="*50)
-                                print("MANO ABIERTA DETECTADA")
-                                print("="*50)
-                                
-                                # Guardar imagen
-                                image_filename = guardar_imagen(frame)
-                                
-                                # Notificar al backend
-                                if notificar_backend(image_filename):
-                                    ultima_deteccion = tiempo_actual
-                                    
-                                    # Mostrar confirmación visual
-                                    cv2.putText(frame, "MANO DETECTADA", (10, 110),
-                                              cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-                                    
-                                    # Flash verde en toda la pantalla
-                                    overlay = frame.copy()
-                                    cv2.rectangle(overlay, (0, 0), 
-                                                (frame.shape[1], frame.shape[0]),
-                                                (0, 255, 0), -1)
-                                    frame = cv2.addWeighted(frame, 0.7, overlay, 0.3, 0)
-                                
-                                print("="*50 + "\n")
-            
-            # Mostrar frame
-            cv2.imshow('Detector de Manos - Despertador', frame)
-            
-            # Capturar teclas
-            key = cv2.waitKey(1) & 0xFF
-            
-            if key == ord('q'):
-                print("\ncerrando detector...")
-                break
-            elif key == ord('s'):
-                # Screenshot manual
-                screenshot_name = guardar_imagen(frame)
-                print(f"screenshot guardado: {screenshot_name}")
-    
-    except KeyboardInterrupt:
-        print("\n\ninterrumpido por el usuario")
-    
-    finally:
-        # Limpiar recursos
-        print("\nLiberando recursos...")
-        cap.release()
-        cv2.destroyAllWindows()
-        hands.close()
-        print("detector detenido correctamente")
         print("\n" + "="*50 + "\n")
 
 

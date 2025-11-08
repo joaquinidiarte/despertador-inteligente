@@ -68,6 +68,7 @@ services:
       - BACKEND_URL=http://backend:3000
       - DISPLAY=${DISPLAY:-:0}
       - PYTHONUNBUFFERED=1
+      - HEADLESS=true
     depends_on:
       - backend
     networks:
