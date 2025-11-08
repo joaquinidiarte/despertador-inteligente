@@ -8,11 +8,17 @@ import stateService from './services/state.service';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const PROJECT_ROOT = path.resolve(__dirname, '../..');
+
+// Usar variable de entorno para la ruta de datos, con fallback
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '../..', 'data');
+const IMAGES_DIR = path.join(DATA_DIR, 'images');
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use('/images', express.static(path.join(PROJECT_ROOT, 'data/images')));
+
+// Servir imágenes estáticas
+app.use('/images', express.static(IMAGES_DIR));
+console.log('Sirviendo imágenes desde:', IMAGES_DIR);
 
 stateService.inicializar();
 
