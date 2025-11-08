@@ -12,8 +12,14 @@ from pathlib import Path
 # Detectar si estamos en modo headless (Docker sin display)
 HEADLESS = os.getenv('HEADLESS', 'false').lower() == 'true'
 
-BASE_DIR = Path(__file__).parent.parent
-DATA_DIR = BASE_DIR / 'data'
+# Usar variable de entorno para la ruta de datos, con fallback
+DATA_DIR_ENV = os.getenv('DATA_DIR')
+if DATA_DIR_ENV:
+    DATA_DIR = Path(DATA_DIR_ENV)
+else:
+    BASE_DIR = Path(__file__).parent.parent
+    DATA_DIR = BASE_DIR / 'data'
+
 IMAGES_DIR = DATA_DIR / 'images'
 STATE_FILE = DATA_DIR / 'state.json'
 
