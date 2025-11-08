@@ -68,16 +68,9 @@ export default function EstadoAlarma({ estado, onCancelar, loading }: EstadoAlar
           </>
         ) : estado.esperando_mano ? (
           <>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
-              <Hand className="h-7 w-7 sm:h-8 sm:w-8 text-yellow-500 animate-pulse-glow" />
-              <Badge variant="secondary" className="text-base sm:text-lg px-3 sm:px-4 py-1.5 sm:py-2 bg-yellow-500 text-black">
-                Esperando detección
-              </Badge>
-            </div>
-            
             <div className="bg-yellow-50 dark:bg-yellow-950 border-2 border-yellow-200 dark:border-yellow-800 rounded-lg p-3 sm:p-4">
               <p className="text-center text-sm sm:text-base md:text-lg font-medium flex flex-col sm:flex-row items-center justify-center gap-2">
-                <span>Extiende tu mano abierta hacia la cámara</span>
+                <span>Apunta la mano a la cámara</span>
               </p>
             </div>
           </>

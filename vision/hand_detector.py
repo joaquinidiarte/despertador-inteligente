@@ -241,8 +241,8 @@ def main():
             # Detectar cambio de estado
             if monitoring != ultimo_estado_monitoring:
                 if monitoring:
-                    print(f"\n🔔 ¡ALARMA ACTIVADA! Hora: {alarm_time}")
-                    print("👋 Esperando detección de mano...")
+                    print(f"\nAlarma puesta hora: {alarm_time}")
+                    print("Esperando detección de mano...")
                 else:
                     print("\n💤 Modo standby")
                 ultimo_estado_monitoring = monitoring

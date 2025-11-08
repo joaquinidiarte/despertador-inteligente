@@ -34,7 +34,7 @@ export default function VideoStream({ isMonitoring }: VideoStreamProps) {
             Vista previa de cámara
           </CardTitle>
           <CardDescription className="text-sm">
-            La vista previa se activará cuando configures una alarma
+            La vista previa se va a activar cuando configures una alarma
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -54,10 +54,10 @@ export default function VideoStream({ isMonitoring }: VideoStreamProps) {
       <CardHeader className="pb-3 sm:pb-6">
         <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
           <Video className="h-5 w-5 text-green-500" />
-          Vista previa en vivo
+          Vista previa
         </CardTitle>
         <CardDescription className="text-sm">
-          Posiciona tu mano para que la cámara la detecte
+          Pone tu mano para que la cámara la detecte
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -76,10 +76,6 @@ export default function VideoStream({ isMonitoring }: VideoStreamProps) {
               className="w-full h-auto"
               onError={() => setStreamError(true)}
             />
-            <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-red-500 px-2 py-1 text-xs text-white">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
-              EN VIVO
-            </div>
           </div>
         )}
       </CardContent>
