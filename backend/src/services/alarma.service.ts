@@ -128,6 +128,7 @@ class AlarmaService {
     const estado = stateService.leerEstado();
     return {
       activa: false,
+      monitoring: estado.monitoring,
       esperando_mano: estado.monitoring
     };
   }
