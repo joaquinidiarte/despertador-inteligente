@@ -2,15 +2,14 @@ FROM python:3.11-slim
 
 # Instalar dependencias del sistema para OpenCV y MediaPipe
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgl1-mesa-glx \
+    libgl1 \
+    libegl1 \
     libglib2.0-0 \
     libsm6 \
     libxrender1 \
     libxext6 \
     libgomp1 \
     v4l-utils \
-    libopencv-dev \
-    python3-opencv \
     && rm -rf /var/lib/apt/lists/*
 
 # Crear directorio de trabajo
