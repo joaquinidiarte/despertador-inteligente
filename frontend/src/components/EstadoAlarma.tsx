@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { Clock, Hand, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import type { AlarmaEstado } from '../types';
 
 interface EstadoAlarmaProps {
@@ -31,15 +31,6 @@ export default function EstadoAlarma({ estado, onCancelar, loading }: EstadoAlar
       <CardContent className="space-y-3 sm:space-y-4">
         {estado.activa ? (
           <>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
-              <div className="relative">
-                <Clock className="h-7 w-7 sm:h-8 sm:w-8 text-green-500 animate-pulse-glow" />
-              </div>
-              <Badge variant="default" className="text-base sm:text-lg px-3 sm:px-4 py-1.5 sm:py-2 bg-green-500">
-                Alarma activa
-              </Badge>
-            </div>
-            
             <div className="space-y-2 text-center">
               <p className="text-base sm:text-lg">
                 <span className="font-semibold">Hora programada:</span>{' '}
