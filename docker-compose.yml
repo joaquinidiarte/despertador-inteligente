@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # Backend - Node.js + Express + SQLite
   backend:
     build:
       context: ./backend
@@ -16,7 +15,6 @@ services:
       - ./backend/src:/app/src
       - ./backend/nodemon.json:/app/nodemon.json
       - ./backend/tsconfig.json:/app/tsconfig.json
-      # Excluir node_modules del bind mount para evitar conflictos
       - /app/node_modules
     environment:
       - NODE_ENV=development
@@ -31,7 +29,6 @@ services:
       retries: 3
       start_period: 40s
 
-  # Frontend - React + Nginx
   frontend:
     build:
       context: ./frontend
@@ -50,7 +47,6 @@ services:
       timeout: 10s
       retries: 3
 
-  # Vision - Python + MediaPipe
   vision:
     build:
       context: ./vision
@@ -59,7 +55,7 @@ services:
     restart: unless-stopped
     command: python hand_detector.py
     devices:
-      - /dev/video0:/dev/video0  # Webcam (Linux/Mac)
+      - /dev/video0:/dev/video0
     volumes:
       - ./data:/app/data
       - ./vision:/app
@@ -74,7 +70,27 @@ services:
       - backend
     networks:
       - despertador-network
-    privileged: true  # Necesario para acceso a cámara
+    privileged: true
+
+  gpio:
+    build:
+      context: ./raspberry
+      dockerfile: Dockerfile
+    container_name: despertador-gpio
+    restart: unless-stopped
+    volumes:
+     - ./raspberry/gpio_controller.py:/app/gpio_controller.py
+     - ./data:/app/data
+    environment:
+      - BACKEND_URL=http://backend:3000
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - despertador-network
+    privileged: true
+    devices:
+      - /dev/gpiomem:/dev/gpiomem
 
 networks:
   despertador-network:

@@ -1,6 +1,5 @@
 import { AlarmaActiva, AlarmaDB } from '../types';
 import db from '../config/database';
-import arduinoService from './arduino.service';
 import stateService from './state.service';
 
 class AlarmaService {
@@ -26,8 +25,7 @@ class AlarmaService {
       throw new Error('No hay alarma activa');
     }
 
-    console.log('Mano detectada, apagando luz...');
-    arduinoService.sendCommand('OFF');
+    console.log('Mano detectada, luz se apagará automáticamente vía GPIO...');
 
     const horaAlarma = estado.alarm_time!;
     const ahora = new Date();
@@ -70,8 +68,7 @@ class AlarmaService {
     tiempoDormido: number,
     imagePath?: string
   ): void {
-    console.log('Encendiendo luz...');
-    arduinoService.sendCommand('ON');
+    console.log('Alarma activada, luz se encenderá automáticamente vía GPIO...');
 
     const horaApagado = new Date(fechaInicio).toLocaleTimeString('es-AR');
     const tiempoDormidoMinutos = Math.round(tiempoDormido / 1000 / 60);
@@ -104,7 +101,6 @@ class AlarmaService {
       this.timerAlarma = null;
     }
 
-    arduinoService.sendCommand('ON');
     stateService.guardarEstado({ monitoring: false, alarm_set: false });
     this.alarmaActiva = null;
 

@@ -102,4 +102,23 @@ router.get('/video-stream', (req: Request, res: Response): void => {
   });
 });
 
+router.post('/alarma/apagar', (req: Request, res: Response): void => {
+  try {
+    const { metodo } = req.body;
+
+    alarmaService.cancelarAlarma();
+
+    res.json({
+      success: true,
+      message: 'Alarma apagada correctamente',
+      metodo: metodo || 'desconocido'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: (error as Error).message
+    });
+  }
+});
+
 export default router;
