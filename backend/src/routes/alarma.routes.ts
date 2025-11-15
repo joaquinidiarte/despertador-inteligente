@@ -95,7 +95,7 @@ router.get('/video-stream', (req: Request, res: Response): void => {
       res.write(latestFrame);
       res.write('\r\n');
     }
-  }, 100); // 10 FPS
+  }, 200); // 10 FPS
 
   req.on('close', () => {
     clearInterval(intervalId);

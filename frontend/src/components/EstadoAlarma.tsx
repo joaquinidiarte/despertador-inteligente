@@ -61,7 +61,7 @@ export default function EstadoAlarma({ estado, onCancelar, loading }: EstadoAlar
           <>
             <div className="bg-yellow-50 dark:bg-yellow-950 border-2 border-yellow-200 dark:border-yellow-800 rounded-lg p-3 sm:p-4">
               <p className="text-center text-sm sm:text-base md:text-lg font-medium flex flex-col sm:flex-row items-center justify-center gap-2">
-                <span>Apunta la mano a la cámara</span>
+                <span>Apuntá la mano a la cámara</span>
               </p>
             </div>
           </>
