@@ -138,43 +138,77 @@ def callback_boton(channel):
 
 
 
+def monitorear_boton():
+    print(f"[{timestamp()}] Iniciando monitoreo de botón")
+
+    boton_presionado_anterior = False
+
+    while estado.running:
+        boton_presionado = GPIO.input(BUTTON_PIN) == GPIO.HIGH
+
+        if boton_presionado and not boton_presionado_anterior:
+            tiempo_actual = time.time()
+
+            if tiempo_actual - estado.ultima_pulsacion >= DEBOUNCE_TIME:
+                estado.ultima_pulsacion = tiempo_actual
+
+                time.sleep(0.05)
+                if GPIO.input(BUTTON_PIN) == GPIO.HIGH:
+                    print(f"\n[{timestamp()}] Botón presionado")
+
+                    # Caso 1: Hay alarma activa → Apagarla
+                    if estado.alarma_activa:
+                        print(f"[{timestamp()}] Apagando alarma...")
+                        apagar_led()
+                        notificar_backend_apagar_alarma()
+                        estado.reset_manual()
+
+                    # Caso 2: Sin alarma → Toggle LED manual
+                    else:
+                        print(f"[{timestamp()}]    → Toggle LED manual")
+                        toggle_led_manual()
+
+        boton_presionado_anterior = boton_presionado
+        time.sleep(0.05)  # Polling cada 50ms
+
+
 def monitorear_alarma():
     print(f"[{timestamp()}] Iniciando monitoreo de alarma...")
-    
+
     alarma_activa_anterior = False
-    
+
     while estado.running:
         tiempo_actual = time.time()
-        
+
         if tiempo_actual - estado.ultima_verificacion_backend >= CHECK_INTERVAL:
             estado.ultima_verificacion_backend = tiempo_actual
 
             alarma_activa_ahora = leer_estado_backend()
-            
+
             if alarma_activa_ahora != alarma_activa_anterior:
                 estado.alarma_activa = alarma_activa_ahora
-                
+
                 if alarma_activa_ahora:
                     # Alarma activada → Encender LED (forzado)
                     print(f"\n[{timestamp()}] ALARMA ACTIVADA")
                     print(f"[{timestamp()}] LED encendido automáticamente")
                     encender_led()
                     estado.reset_manual()
-                
+
                 else:
                     # Alarma desactivada → Apagar LED (forzado)
                     print(f"\n[{timestamp()}] Alarma desactivada")
                     print(f"[{timestamp()}] LED apagado automáticamente")
                     apagar_led()
                     estado.reset_manual()
-                
+
                 alarma_activa_anterior = alarma_activa_ahora
-            
+
             # Si hay alarma activa, forzar LED encendido
             # (por si algo lo apagó externamente)
             if estado.alarma_activa and not estado.led_encendido:
                 encender_led()
-        
+
         time.sleep(0.1)
 
 def inicializar_gpio():
@@ -206,31 +240,20 @@ def signal_handler(sig, frame):
     limpiar_gpio()
     sys.exit(0)
 
-def main():    
+def main():
 
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
-    
+
     inicializar_gpio()
-    
-    try:
-        GPIO.add_event_detect(
-            BUTTON_PIN, 
-            GPIO.RISING, 
-            callback=callback_boton, 
-            bouncetime=300
-        )
-        print(f"[{timestamp()}] Interrupción de botón configurada")
-    except Exception as e:
-        print(f"[{timestamp()}] Error configurando interrupción: {e}")
-        print(f"[{timestamp()}] El sistema seguirá funcionando")
-    
+
     # Información del sistema
     print(f"\n[{timestamp()}] Configuración:")
     print(f"[{timestamp()}]    Backend: {BACKEND_URL}")
     print(f"[{timestamp()}]    Intervalo verificación: {CHECK_INTERVAL}s")
     print(f"[{timestamp()}]    Debounce botón: {DEBOUNCE_TIME}s")
-    
+    print(f"[{timestamp()}]    Modo: Polling (compatible con Docker)")
+
     print(f"\n[{timestamp()}] Funcionamiento:")
     print(f"[{timestamp()}]    1. Sin alarma:")
     print(f"[{timestamp()}]       - Presionar botón → Enciende/Apaga LED")
@@ -239,21 +262,25 @@ def main():
     print(f"[{timestamp()}]       - Presionar botón → Apaga alarma y LED")
     print(f"[{timestamp()}]    3. Alarma desactivada:")
     print(f"[{timestamp()}]       - LED se apaga automáticamente")
-    
+
     print(f"\n[{timestamp()}] Sistema listo")
     print(f"[{timestamp()}]    Presiona Ctrl+C para salir")
     print("="*60 + "\n")
-    
-    thread_monitoreo = threading.Thread(target=monitorear_alarma, daemon=True)
-    thread_monitoreo.start()
-    
+
+    # Iniciar threads de monitoreo
+    thread_alarma = threading.Thread(target=monitorear_alarma, daemon=True)
+    thread_boton = threading.Thread(target=monitorear_boton, daemon=True)
+
+    thread_alarma.start()
+    thread_boton.start()
+
     try:
         while estado.running:
             time.sleep(1)
-    
+
     except KeyboardInterrupt:
         print(f"\n[{timestamp()}] Interrumpido por usuario")
-    
+
     finally:
         estado.running = False
         limpiar_gpio()
