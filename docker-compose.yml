@@ -88,9 +88,6 @@ services:
         condition: service_healthy
     networks:
       - despertador-network
-    group_add:
-      - dialout
-      - gpio
     privileged: true
     devices:
       - /dev/gpiomem:/dev/gpiomem
