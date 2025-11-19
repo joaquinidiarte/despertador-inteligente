@@ -70,6 +70,9 @@ class AlarmaService {
   ): void {
     console.log('Alarma activada, luz se encenderá automáticamente vía GPIO...');
 
+    // Activar monitoring para que el GPIO encienda el LED
+    stateService.guardarEstado({ monitoring: true, alarm_set: false });
+
     const horaApagado = new Date(fechaInicio).toLocaleTimeString('es-AR');
     const tiempoDormidoMinutos = Math.round(tiempoDormido / 1000 / 60);
 
