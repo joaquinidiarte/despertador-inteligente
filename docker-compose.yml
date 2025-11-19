@@ -20,6 +20,7 @@ services:
       - NODE_ENV=development
       - PORT=3000
       - DATA_DIR=/app/data
+      - TZ=America/Argentina/Buenos_Aires
     networks:
       - despertador-network
     healthcheck:
@@ -66,6 +67,7 @@ services:
       - PYTHONUNBUFFERED=1
       - HEADLESS=true
       - DATA_DIR=/app/data
+      - TZ=America/Argentina/Buenos_Aires
     depends_on:
       - backend
     networks:
@@ -83,6 +85,7 @@ services:
      - ./data:/app/data
     environment:
       - BACKEND_URL=http://backend:3000
+      - TZ=America/Argentina/Buenos_Aires
     depends_on:
       backend:
         condition: service_healthy
